@@ -2,34 +2,9 @@ from enum import Enum
 import json
 import os
 
-TOKEN = 'inserisco token'
+TOKEN = '7830149096:AAGamR0dRJKesNJYZQWu_B9h33BmQtvrhk8'
 ADMIN = 'SANTIAGO'
 file_name = "coinquilini.json"
-
-#gestione JSON
-def carica_json(file_name):
-    if os.path.exists(file_name):
-        with open(file_name,'r') as f:
-            data = json.load(f)
-
-            #caricamento in dizionario
-            for nome, punti in data.items():
-                coinquilini[nome] = Inquilino(nome, punti)
-                print("Coinquilini caricati correttamente dal JSON.")
-    else:
-       # json vuoto
-       print("File JSON non trovato, avvio con lista vuota.")
-
-
-# salvo il JSON
-def salva_json(data, file_name):
-    data = {nome: inquilino.punti for nome, inquilino in coinquilini.items()}
-    with open(file_name, 'w') as f:
-        json.dump(data, f, indent=4)
-    print("Coinquilini salvati su JSON.")
-
-def inizializza_diario(file_name):
-    return carica_json(file_name)
 
 #gestione resto
 class Inquilino:
@@ -38,7 +13,8 @@ class Inquilino:
         self.punti = punti
 
     def __str__(self):
-        return f"{self.name} ha {self.punti}"
+        return f"{self.name} a {self.punti}"
+
     def aggiungi_punti(self,guadagno):
         self.punti+=guadagno
 
@@ -65,7 +41,7 @@ def salva_json(data, file_name):
     with open(file_name, 'w') as f:
         data = {nome: inquilino.punti for nome, inquilino in coinquilini.items()}
         json.dump(data, f, indent = 4)
-    print("Situazione attuale salvata sul JSON")
+    print("Return positivo: Situazione attuale salvata sul JSON")
 
     # devo passare il nome dal main, chiedendolo a video
 def aggiungi_coinquilino():
@@ -118,44 +94,26 @@ def esegui_setting(azione):
     else:
         print("azione non valida")
 
-class SottoFaccenda(Enum):
-    CESTINI = ("Cestini", 1)
-    LAVASTOVIGLIE = ("Lavastoviglie", 2)
-    SALA = ("Sala", 4)
-    ENTRATA = ("Entrata", 4)
-    CUCINA = ("Cucina", 4)
-    QUADRI = ("Quadri e battiscopa", 2)
-    TAVOLO = ("Tavolo", 2)
-
-    def __init__(self, descrizione, valore):
-        self._descrizione = descrizione  # Uso di un nome diverso (con _)
-        self._valore = valore
-
-    @property
-    def descrizione(self):
-        return self._descrizione  # Ritorna l'attributo privato
-
-    @property
-    def valore(self):
-        return self._valore  # Ritorna l'attributo privato
-
-class Faccende(Enum):
-    PULITO = ("Pulito", [SottoFaccenda.SALA, SottoFaccenda.ENTRATA])
-    SVUOTATO = ("Svuotato", [SottoFaccenda.CESTINI, SottoFaccenda.LAVASTOVIGLIE])
-    ASPIRATO = ("Aspirato", [SottoFaccenda.CUCINA, SottoFaccenda.QUADRI, SottoFaccenda.TAVOLO])
-
-    @property
-    def descrizione(self):
-        return self.value[0]
-
-    @property
-    def sottofaccende(self):
-        return self.value[1]
+DICT = {
+    "PULITO":{
+        "CUCINA": 2,
+        "TAVOLO": 1,
+        "QUADRI": 1
+    },
+    "ASPIRATO":{
+        "ENTRATA": 2,
+        "SALA": 2
+    },
+    "SVUOTATO":{
+        "CESTINI": 1,
+        "LAVASTOVIGLIE": 1
+    }
+}
 
 def main():
     carica_json(file_name)
-    inizializza_diario(file_name)
     # se parto a lista coinquilini vuota
+
     if not coinquilini:
         scelta = input("la lista dei coinquilina è vuota, aggiungerne uno per continuare? Si/ Esci").upper()
         if(scelta == "SI"):
@@ -169,50 +127,61 @@ def main():
     while nome not in coinquilini:
         print(f"Errore! {nome} non è presente nella lista dei coinquilini! ")
         nome = input("Inserisci il tuo nome").upper()
-
+    scan = "SI"
     if nome == ADMIN:
         scelta = input(f"{nome} sei admin! Cosa vuoi fare? settings / aggiungi ").upper() #settings or aggiungi
         if scelta == 'SETTINGS':
-            # scorro enum per quale impostazione voglio fare
-            for setting in settings:
-                print(f"-{setting.value}")
-            azione_input = input("Scegli tra una di queste azioni").upper()
-            try:
-                azione = settings[azione_input]
-                esegui_setting(azione)
-            except KeyError:
-                print("Azione non valida, riprova")
-            scan = input("vuoi anche aggiungere faccende eseguite?").upper()
+            while (scan=="SI"):
+                # scorro enum per quale impostazione voglio fare
+                for setting in settings:
+                    print(f"-{setting.value}")
+                azione_input = input("Scegli tra una di queste azioni\n")
+                try:
+                    azione = settings[azione_input]
+                    esegui_setting(azione)
+                    scan = input("Vuoi eseguire altre settings? ").upper()
+                except KeyError:
+                    print("Azione non valida, riprova")
+            scan = input(f"{ADMIN} vuoi anche aggiungere faccende eseguite?").upper()
             if scan == "NO":
                 return
 
     continua = True
     moltiplicatore = 1
+    guadagnoTot = 0
     while continua:
-        for faccenda in Faccende:
-            print(f"-{faccenda.descrizione}")
+        for faccenda in DICT:
+            print(faccenda)
         faccenda_input = input("Che faccenda di queste hai eseguito? ").upper()
         try:
-            azione = Faccende[faccenda_input.upper()]
-            print(f"Che cosa hai {azione.descrizione} ?")
-            for sotto in azione.sottofaccende:
-                print(f"-{sotto.descrizione}")
+            print(f"Che cosa hai {faccenda_input} ?")
+            for SubAzione in DICT[faccenda_input]:
+                print(f"{SubAzione}")
+
             sottofaccenda_input = input("").upper()
             if (sottofaccenda_input == "Cestini"):
                 moltiplicatore = int(input("Quanti cestini hai svuotato? 1,2,3 o 4? "))
                 while moltiplicatore>4 or moltiplicatore == 0:
-                    moltiplicatore = int(input("Errore! puoi inserire solo numeri compresi tra 1 e 4, inseriscine un altro"))
+                    moltiplicatore = int(input("Errore! puoi inserire solo numeri compresi tra 1 e 4, inseriscine un altro "))
             # aggiungo punteggio
-            sottofaccenda = SottoFaccenda[sottofaccenda_input].valore
-            guadagno = moltiplicatore*sottofaccenda.valore
+            valore_sottofaccenda = DICT[faccenda_input][sottofaccenda_input]
+            guadagno = moltiplicatore*valore_sottofaccenda
+            guadagnoTot += guadagno
 
             coinquilini[nome].aggiungi_punti(guadagno)
             moltiplicatore = 1
         except KeyError:
             print("Azione non valida")
+
         scan = input("Hai eseguito altre faccende?").upper()
         if(scan == "NO"):
             continua = False
+        print(f"Complimenti {nome}! Hai guadagnato {guadagnoTot} punti in totale ")
+        print("continua così!")
+
+    print("Situazione attuale: ")
+    for nome, coinquilino in coinquilini.items():
+        print(f"{coinquilino.name} a {coinquilino.punti} punti\n")
     salva_json(coinquilini,file_name)
 
 if __name__== "__main__":

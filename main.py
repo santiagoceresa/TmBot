@@ -2,7 +2,7 @@ from enum import Enum
 import json
 import os
 
-TOKEN = '7830149096:AAGamR0dRJKesNJYZQWu_B9h33BmQtvrhk8'
+TOKEN = ''
 ADMIN = 'SANTIAGO'
 file_name = "coinquilini.json"
 
